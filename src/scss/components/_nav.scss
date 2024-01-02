@@ -1,0 +1,19 @@
+.nav {
+    min-height: 6.2rem;
+
+    @include respond(phone) {
+        min-height: 100%;
+        width: 100%;
+        position: absolute;
+        z-index: 10;
+        display: none;
+
+        &--active {
+            display: block;
+        }
+
+        ul {
+            height: 100vh;
+        }
+    }
+}

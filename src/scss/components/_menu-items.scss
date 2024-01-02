@@ -1,0 +1,29 @@
+.menu-items {
+    background-color: var(--primary);
+    font-size: 1.8rem;
+
+    &__container {
+      display: flex;
+      padding: 1rem 10rem;
+
+      @include respond(phone) {
+        flex-direction: column;
+        padding: 1rem 5rem;
+      }
+    }
+
+    &__list {
+      list-style: none;
+      padding: 1rem;
+    }
+
+    &__link {
+      color: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      text-decoration: none;
+
+      &--active {
+        color: rgba(255, 255, 255, 1);
+      }
+    }
+}

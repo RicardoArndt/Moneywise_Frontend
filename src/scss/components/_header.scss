@@ -1,0 +1,27 @@
+.header {
+    color: var(--secondary);
+
+    &__container {
+      display: flex;
+      align-items: center;
+      height: 18rem; 
+
+      padding: 1rem 10rem;
+      background: var(--primary) linear-gradient(hsla(0, 0%, 100%, .2), transparent);
+
+      @include respond(phone) {
+        padding: 1rem 5rem;
+        height: 15rem;
+      }
+
+      &--black {
+        background-color: var(--darker);
+      }
+    }
+
+    &__title {
+      font-size: 2rem;
+      margin: 1rem;
+      text-transform: uppercase;
+    }
+}

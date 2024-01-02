@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+@import "animate.css";
+
+@import "scss/icons";
+
+@import "scss/variables";
+
+@import "scss/abstracts/mixins"; 
+
+@import "scss/components/action-buttons";
+@import "scss/components/button";
+@import "scss/components/header";
+@import "scss/components/form";
+@import "scss/components/menu-items";
+@import "scss/components/modal";
+@import "scss/components/nav";
+@import "scss/components/navigator-content";
+@import "scss/components/status";
+@import "scss/components/table";
+
+
+body { 
+    background-color: var(--background);
+}
+
+body, html {
+    padding: 0;
+    margin: 0;
+    font-size: 10px;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: 'Lato', sans-serif;
+}

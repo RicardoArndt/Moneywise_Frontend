@@ -1,0 +1,50 @@
+$width: 2.5rem;
+$height: 1.5px;
+$top: .7rem;
+
+@mixin line($top-line) {
+    content: "";
+    background-color: white;
+    width: $width;
+    height: $height;
+    top: $top-line;
+    left: 0;
+    position: absolute;
+    transition: all .2s;
+}
+
+.icon {
+    display: block;
+    width: 2.4rem;
+    height: 2.4rem;
+    margin: 1rem;
+
+    &__menu {
+        position: relative;
+        background-color: white;
+        width: $width;
+        height: $height;
+
+        &::before {
+            @include line(-$top);
+        }
+
+        &::after {
+            @include line($top);
+        }
+
+        &--checked {
+            background-color: transparent;
+        }
+
+        &--checked::before {
+            top: 0;
+            transform: rotate(135deg);
+        }
+
+        &--checked::after {
+            top: 0;
+            transform: rotate(-135deg);
+        }
+    }
+}
