@@ -6,6 +6,7 @@ export class TableColumnQuantity extends TableColumn {
 
     constructor(
         public override readonly id: number,
-        public override readonly inputs: {quantity: number}
-    ) { super(id, ''); }
+        public override readonly inputs: {quantity: number},
+        public override readonly label: string = '',
+    ) { super(id, '', label); }
 }

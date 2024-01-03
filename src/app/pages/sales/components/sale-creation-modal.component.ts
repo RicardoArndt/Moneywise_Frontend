@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { Observable, filter, firstValueFrom } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 
 import { ModalComponent } from '../../../commons/modal/modal.component';
 import { InputComponent } from '../../../commons/input/input.component';
@@ -43,7 +43,6 @@ import { IFormComponent } from '../../../commons/forms/models/form';
   providers: [
     FormService
   ],
-  styles: ``,
   template: `
     <moneywise-app-modal>
       <ng-container ngProjectAs="modal-header">
@@ -59,9 +58,7 @@ import { IFormComponent } from '../../../commons/forms/models/form';
                   <a 
                     class="navigator-content__link"
                     [ngClass]="{'navigator-content__link--active': isFormActive(form.name)}"
-                    routerLink="./"
-                    routerLinkActive=""
-                    [queryParams]="{form: form.name}">
+                    (click)="navigateTo(form.name)">
                     {{ form.title }}
                   </a>
                 </li>
@@ -97,7 +94,7 @@ export class SaleCreationModalComponent implements AfterViewInit {
   public previousButton: Button = new Button(this.previousForm.bind(this), 'Anterior');
   public nextButton: Button = new Button(this.nextForm.bind(this), 'Próximo');
 
-  public confirmButton: Button = new Button(this.onSave.bind(this), 'Concluir Venda');
+  public confirmButton: Button = new Button(this.onSave.bind(this), 'Salvar');
 
   public forms: WritableSignal<ISaleForm[]> = signal([]);
 
@@ -121,17 +118,15 @@ export class SaleCreationModalComponent implements AfterViewInit {
   ) { }
   
   public ngAfterViewInit(): void {
-    this.formsComponents?.changes.subscribe(f => {
-      const formsItems = this.formsComponents?.map(form => {
-        return {
-          name: form.name,
-          title: form.title,
-          form: form
-        }
-      });
-
-      this.forms.update(_ => formsItems);
+    const formsItems = this.formsComponents?.map(form => {
+      return {
+        name: form.name,
+        title: form.title,
+        form: form
+      }
     });
+
+    this.forms.update(_ => formsItems);
   }
 
   public isFormActive(formName: string) {
@@ -153,11 +148,15 @@ export class SaleCreationModalComponent implements AfterViewInit {
       return;
     }
 
-    for (const form of this.formsComponents) {
+    for (const form of this.formsComponents.filter(f => !f.isEdit)) {
       await form.onSave();
     }
 
-    await firstValueFrom(this.salesService.commit());
+    for (const form of this.formsComponents.filter(f => f.isEdit)) {
+      await form.onEdit();
+    }
+
+    await firstValueFrom(this.salesService.updateOrCreate());
 
     this.modalService.close();
   }
@@ -188,6 +187,18 @@ export class SaleCreationModalComponent implements AfterViewInit {
     }
   }
 
+  public navigateTo(form: string) {
+    this.router.navigate(
+      [], 
+      { 
+        relativeTo: this.activatedRoute, 
+        queryParams: 
+        { 
+          form 
+        } 
+      });
+  }
+
   private currentFormHasError() {
     return this.forms().find(f => f.name == this.activeFormName)?.form.formGroup.invalid;
   }
@@ -203,17 +214,5 @@ export class SaleCreationModalComponent implements AfterViewInit {
 
   private formHasError(formName: string) {
     return this.forms().find(f => f.name == formName)?.form.formGroup.invalid;
-  }
-
-  private navigateTo(form: string) {
-    this.router.navigate(
-      [], 
-      { 
-        relativeTo: this.activatedRoute, 
-        queryParams: 
-        { 
-          form 
-        } 
-      });
   }
 }

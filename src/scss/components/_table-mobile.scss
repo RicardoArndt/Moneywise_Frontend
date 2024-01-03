@@ -1,0 +1,35 @@
+.table-mobile {
+    display: none;
+    margin-top: 2rem;
+
+    @include respond(phone) {
+        display: flex;
+        flex-direction: column;
+    }
+
+    &__body {
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    &__line {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        background-color: white;
+        padding: 2rem;
+    }
+
+    &__column {
+        display: flex;
+        flex-direction: column;
+        gap: .5rem;
+    }
+
+    .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+}

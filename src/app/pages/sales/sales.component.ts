@@ -15,17 +15,13 @@ import { PhonePipe } from '../../commons/pipes/phone.pipe';
   imports: [
     CommonModule,
     ButtonComponent,
-    TableComponent,
-    SaleCreationModalComponent
+    TableComponent
   ],
   providers: [
-    SalesService,
     PhonePipe
   ],
   styles: ``,
   template: `
-    <moneywise-app-sale-creation-modal />
-
     <moneywise-app-button right [button]="saleButton" />
 
     <moneywise-app-table [table]="table" />
@@ -48,6 +44,6 @@ export class SalesComponent {
   }
 
   public openModalSaleCreation() {
-    this.modalService.open();
+    this.modalService.open(SaleCreationModalComponent, { form: 'customer' }, true);
   }
 }

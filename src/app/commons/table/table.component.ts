@@ -39,6 +39,39 @@ import { Table } from './models/table';
         </tbody>
       </table>
     </div>
+
+    <div class="table-mobile">
+      <div class="table-mobile__body">
+        @for (r of table.getRows(); track r.id; let rIndex = $index) {
+          <div class="table-mobile__line">
+            @for (c of r.columns; track c.id; let cIndex = $index) {
+              @if (!c.component) {
+                <div class="table-mobile__column">
+                  <label>
+                    <strong>
+                      {{ r.isTotal ? c.label : table.getHead()[0].columns[cIndex].value }}
+                    </strong>
+                  </label>
+                  {{ c.value }}
+                </div>
+              }  @else {
+                <div class="table-mobile__column">
+                  <label>
+                    <strong>
+                      {{ r.isTotal ? c.label : table.getHead()[0].columns[cIndex].value }}
+                    </strong>
+                  </label>
+                  <ng-container *ngComponentOutlet="
+                    c.component;
+                    inputs: c.inputs;
+                  " />
+                </div>
+              }
+            }
+          </div>
+        }
+      </div>
+    </div>
   `
 })
 export class TableComponent {

@@ -1,68 +1,61 @@
 .table {
-    border-spacing: 0 1rem;
-    width: 100%;
-    text-align: left;
-    font-size: 1.2rem;
+  @include respond(phone) {
+    display: none;
+  }
 
-    &__head {
-      color: var(--textEmphasis);
-      font-weight: bold;
+  border-spacing: 0 1rem;
+  width: 100%;
+  text-align: left;
+  font-size: 1.2rem;
+
+  &__head {
+    color: var(--textEmphasis);
+    font-weight: bold;
+  }
+
+  &--responsive {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  
+  &__line {
+    background-color: var(--secondary);
+    position: relative;
+
+    &:first-child {
+      max-height: 6.1rem;
     }
 
-    &--responsive {
-      overflow-x: auto;
-      overflow-y: hidden;
+    &:nth-child(even) {
+      background-color: var(--textEmphasis);
+      color: white;
     }
-    
-    &__body {
-      
+  }
+
+  &__column {
+    padding: 1rem 2rem;
+
+    .actions {
+      display: inline-flex;
+      gap: 1rem;
     }
-    
-    &__line {
+
+    &:first-child {
+      position: -webkit-sticky;
+      position: sticky;
+      left: 0;
       background-color: var(--secondary);
-      position: relative;
-
-      &:first-child {
-        max-height: 6.1rem;
-      }
+      color: var(--textEmphasis);
+      border-right: 1px solid var(--grey);
     }
 
-    &__column {
-      padding: 1rem 5rem;
-      min-width: 20rem;
-
-      @include respond(phone) {
-        min-width: 8rem;
-        padding: 1rem 2rem;
-      }
-
-      &:first-child {
-        position: -webkit-sticky;
-        position: sticky;
-        left: 0;
-        background-color: var(--secondary);
-        border-right: 1px solid var(--grey);
-        min-width: 10rem;
-
-        @include respond(phone) {
-          min-width: 8rem;
-          padding: 1rem 2rem;
-          position: initial;
-          border-right: none;
-        }
-      }
-
-      &:last-child {
-        position: -webkit-sticky;
-        position: sticky;
-        right: 0;
-        background-color: var(--secondary);
-        border-left: 1px solid var(--grey);
-        width: auto;
-
-        @include respond(phone) {
-            padding: 1rem 2rem;
-        }
-      }
+    &:last-child {
+      position: -webkit-sticky;
+      position: sticky;
+      right: 0;
+      background-color: var(--secondary);
+      border-left: 1px solid var(--grey);
+      width: 1rem;
     }
+  }
 }

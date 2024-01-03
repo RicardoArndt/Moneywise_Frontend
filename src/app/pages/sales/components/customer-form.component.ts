@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 
@@ -9,7 +9,10 @@ import { FormOnlyDigitsControl } from "../../../commons/controls/form-only-digit
 import { onlyDigits } from "../../../commons/controls/validators/max-length-only-digits.directive";
 import { FormBuilder } from "../../../commons/builders/form.builder";
 import { IFormComponent } from "../../../commons/forms/models/form";
-import { ISaleCustomer, SalesService } from "../services/sales.service";
+import { SalesService } from "../services/sales.service";
+import { ISaleCustomer } from "../models/sale-customer";
+import { SaleEditService } from "../services/sale-edit.service";
+import { filter, mergeMap, tap } from "rxjs";
 
 @Component({
     selector: 'moneywise-app-customer-form',
@@ -26,7 +29,9 @@ import { ISaleCustomer, SalesService } from "../services/sales.service";
         </form>
     `
 })
-export class CustomerFormComponent implements IFormComponent {
+export class CustomerFormComponent implements IFormComponent, OnInit {
+    public isEdit: boolean = false;
+    public saleId: number = 0;
     public name: string = 'customer';
     public title: string = 'Cliente'; 
 
@@ -65,8 +70,22 @@ export class CustomerFormComponent implements IFormComponent {
 
     constructor(
         private readonly formBuilder: FormBuilder,
-        private readonly salesService: SalesService
+        private readonly salesService: SalesService,
+        private readonly saleEditService: SaleEditService
     ) { }
+
+    public ngOnInit(): void {
+        this.saleEditService.onEdit()
+            .pipe(
+                tap(id => this.isEdit = !!id),
+                tap(id => this.saleId = id),
+                mergeMap(id => this.salesService.readCustomer(id)),
+                filter(customer => !!customer))
+            .subscribe(customer => {
+                this.nameControl.setValue(customer?.customerName);
+                this.contactControl.setValue(customer?.customerContact);
+            });
+    }
 
     public async onSave() {
         const customer: ISaleCustomer = {
@@ -75,5 +94,14 @@ export class CustomerFormComponent implements IFormComponent {
         };
 
         await this.salesService.createCustomer(customer);
+    }
+
+    public async onEdit() {
+        const customer: ISaleCustomer = {
+            customerContact: this.contactControl.getCurrentValue(),
+            customerName: this.nameControl.value
+        };
+
+        await this.salesService.updateCustomer(this.saleId, customer);
     }
 }

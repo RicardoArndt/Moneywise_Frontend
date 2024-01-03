@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { 
     FormArray, 
@@ -9,13 +9,16 @@ import {
     Validators 
 } from "@angular/forms";
 import { faAdd, faMinus } from "@fortawesome/free-solid-svg-icons";
+import { filter, mergeMap, tap } from "rxjs";
 
 import { InputComponent } from "../../../commons/input/input.component";
 import { Input as InputModel } from '../../../commons/input/models/input';
 import { ButtonComponent } from "../../../commons/button/button.component";
 import { Button } from "../../../commons/button/models/button";
 import { IFormComponent } from "../../../commons/forms/models/form";
-import { ISaleProduct, SalesService } from "../services/sales.service";
+import { SalesService } from "../services/sales.service";
+import { SaleEditService } from "../services/sale-edit.service";
+import { ISaleProduct } from "../models/sale-product";
 
 @Component({
     selector: 'moneywise-app-product-form',
@@ -41,7 +44,9 @@ import { ISaleProduct, SalesService } from "../services/sales.service";
         </div>
     `
 })
-export class ProductFormComponent implements IFormComponent {
+export class ProductFormComponent implements IFormComponent, OnInit {
+    public isEdit: boolean = false;
+    public saleId: number = 0;
     public name: string = 'product';
     public title: string = 'Produtos';
 
@@ -78,8 +83,29 @@ export class ProductFormComponent implements IFormComponent {
 
     constructor(
         private readonly formBuilder: FormBuilder,
-        private readonly salesService: SalesService
+        private readonly salesService: SalesService,
+        private readonly saleEditService: SaleEditService,
     ) { }
+
+    public ngOnInit(): void {
+        this.saleEditService.onEdit()
+            .pipe(
+                tap(id => this.isEdit = !!id),
+                tap(id => this.saleId = id),
+                mergeMap(id => this.salesService.readProducts(id)),
+                filter(products => !!products.length))
+            .subscribe((products: ISaleProduct[]) => {
+                this.productsForm.removeAt(0);
+
+                for (const product of products) {
+                    this.productsForm.push(
+                        this.formBuilder.group({ 
+                            name: this.formBuilder.control(product.name, [Validators.required]),
+                            quantity: this.formBuilder.control(product.quantity, [Validators.required]) 
+                        }));
+                }
+            });
+    }
 
     public getProductNameInput(formGroup: FormGroup, index: number): InputModel {
         const control = formGroup.get('name') as FormControl;
@@ -131,6 +157,20 @@ export class ProductFormComponent implements IFormComponent {
 
         for (const product of products) {
             await this.salesService.createProduct(product);
+        }
+    }
+
+    public async onEdit() {
+        const products: ISaleProduct[] = this.productsControls.map(control => {
+            return {
+              name: control.name.value,
+              quantity: control.quantity.value
+            }
+          }
+        );
+
+        for (const product of products) {
+            await this.salesService.updateProduct(this.saleId, product);
         }
     }
 }

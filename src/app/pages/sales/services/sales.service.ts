@@ -1,5 +1,5 @@
 import { Injectable } from "@angular/core";
-import { faRotateLeft } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faRemove, faRotateLeft } from "@fortawesome/free-solid-svg-icons";
 import { BehaviorSubject, Observable, map, of } from "rxjs";
 
 import { ICrudService } from "../../../commons/services/crud.service";
@@ -15,58 +15,31 @@ import { SalesStatus } from "../models/sales-status";
 import { TableColumnCurrency } from "../../../commons/table/models/table-column-currency";
 import { TableColumnPhone } from "../../../commons/table/models/table-column-phone";
 import { TableColumnQuantity } from "../../../commons/table/models/table-column-quantity";
+import { ButtonType } from "../../../commons/button/models/button-type";
+import { DialogService } from "../../../commons/dialog/services/dialog.service";
+import { SaleEditService } from "./sale-edit.service";
+import { ISale } from "../models/sale";
+import { ISaleCreation } from "../models/sale-creation";
+import { ISaleCustomer } from "../models/sale-customer";
+import { ISalePayment } from "../models/sale-payment";
+import { ISaleProduct } from "../models/sale-product";
 
-export interface ISale {
-    id: number;
-    customerName: string;
-    customerContact: string;
-    state: string;
-    products: ISaleProduct[];
-    paymentValue: number;
-    paymentMethod: string;
-}
-
-export interface ISaleCustomer {
-    customerName: string;
-    customerContact: string;
-}
-
-export interface ISalePayment {
-    state: string;
-    paymentValue: number;
-    paymentMethod: string;
-}
-
-export interface ISaleProduct {
-    name: string;
-    quantity: number;
-}
-
-export interface ISaleCreation {
-    customerName: string;
-    customerContact: string;
-    state: string;
-    products: ISaleProduct[];
-    paymentValue: number;
-    paymentMethod: string;
-}
-
-@Injectable()
+@Injectable({
+    providedIn: 'root'
+})
 export class SalesService implements ICrudService<ISale> {
-    private readonly products: ISaleProduct[] = [];
-    private readonly payment: ISalePayment = {
-        paymentMethod: '',
-        paymentValue: 0,
-        state: ''
-    };
-    private readonly customer: ISaleCustomer = {
-        customerContact: '',
-        customerName: ''
-    };
+    private isEdit: boolean = false;
+    private saleId: number = 0;
+    private products: ISaleProduct[] = [];
+    private payment?: ISalePayment;
+    private customer?: ISaleCustomer;
 
     private readonly $sales: BehaviorSubject<ISale[]> = new BehaviorSubject<ISale[]>([]);
 
-    constructor() {
+    constructor(
+        private readonly dialogService: DialogService,
+        private readonly saleEditService: SaleEditService
+    ) {
         this.$sales.next(this.getSalesFromStorage());
     }
 
@@ -82,18 +55,30 @@ export class SalesService implements ICrudService<ISale> {
         return Promise.resolve();
     }
 
+    public async updateProduct(saleId: number, product: ISaleProduct) {
+        this.isEdit = true;
+        this.saleId = saleId;
+        this.createProduct(product);
+        return Promise.resolve();
+    }
+
     public async createPayment(payment: ISalePayment) {
         if (!payment 
             || !payment.paymentMethod 
             || !payment.paymentValue 
-            || !payment.state) {
+            || !payment.status) {
             throw Error('Pagamento inválido');
         }
 
-        this.payment.paymentMethod = payment.paymentMethod;
-        this.payment.paymentValue = payment.paymentValue;
-        this.payment.state = payment.state;
+        this.payment = payment;
 
+        return Promise.resolve();
+    }
+
+    public async updatePayment(saleId: number, payment: ISalePayment) {
+        this.isEdit = true;
+        this.saleId = saleId;
+        this.createPayment(payment);
         return Promise.resolve();
     }
 
@@ -104,38 +89,88 @@ export class SalesService implements ICrudService<ISale> {
             throw Error('Cliente inválido');
         }
 
-        this.customer.customerContact = customer.customerContact;
-        this.customer.customerName = customer.customerName;
+        this.customer = customer;
 
         return Promise.resolve();
     }
 
+    public async updateCustomer(saleId: number, customer: ISaleCustomer) {
+        this.isEdit = true;
+        this.saleId = saleId;
+        this.createCustomer(customer);
+        return Promise.resolve();
+    }
 
-    public commit(): Observable<Response> {
+    public updateOrCreate(): Observable<Response> {
         const item: ISaleCreation = {
-            customerContact: this.customer.customerContact,
-            customerName: this.customer.customerName,
-            paymentMethod: this.payment.paymentMethod,
-            paymentValue: this.payment.paymentValue,
+            customerContact: this.customer!.customerContact,
+            customerName: this.customer!.customerName,
+            paymentMethod: this.payment!.paymentMethod,
+            paymentValue: this.payment!.paymentValue,
             products: this.products,
-            state: this.payment.state
+            status: this.payment!.status
         };
 
+        if (!this.isEdit) {
+            this.create(item);
+        } else {
+            this.update(this.saleId, item);
+        }
+
+        this.isEdit = false;
+        this.saleId = 0;
+        this.customer = undefined;
+        this.payment = undefined;
+        this.products = [];
+
+        return this.commit();
+    }
+
+    public commit(): Observable<Response> {
         const sales = this.$sales.value;
-        const id = (sales[sales.length - 1]?.id ?? 0) + 1;
-        const sale = { id, ...item }
-        sales.push(sale);
-        this.$sales.next(sales);
 
-        const salesStorage = this.getSalesFromStorage();
-        salesStorage.push(sale);
-        localStorage.setItem('sales', JSON.stringify(salesStorage));
-
+        localStorage.setItem('sales', JSON.stringify(sales));
+        
         return of(new Response());
     }
     
-    public read(id: number): Observable<ISale | undefined> {
-        return this.$sales.pipe(map(sales => sales.find(s => s.id == id)));
+    public readProducts(saleId: number): Observable<ISaleProduct[]> {
+        return this.$sales.pipe(map(sales => {
+            const sale = sales.find(s => s.id == saleId);
+
+            return sale?.products ?? [];
+        }));
+    }
+
+    public readPayment(saleId: number): Observable<ISalePayment|null> {
+        return this.$sales.pipe(map(sales => {
+            const sale = sales.find(s => s.id == saleId);
+
+            if (!sale) {
+                return null;
+            }
+
+            return {
+                paymentMethod: sale.paymentMethod,
+                paymentValue: sale.paymentValue,
+                status: sale.status
+            };
+        }));
+    }
+
+    public readCustomer(saleId: number): Observable<ISaleCustomer|null> {
+        return this.$sales.pipe(map(sales => {
+            const sale = sales.find(s => s.id == saleId);
+
+            if (!sale) {
+                return null;
+            }
+
+            return {
+                customerName: sale.customerName,
+                customerContact: sale.customerContact
+            };
+        }));
     }
     
     public readAll(): Observable<Table> {
@@ -158,24 +193,98 @@ export class SalesService implements ICrudService<ISale> {
                     [
                         new TableColumn(1, s.id.toString()),
                         new TableColumn(2, s.customerName),
-                        new TableColumnStatus(3, { status: new SalesStatus(s.state).status }),
-                        new TableColumnPhone(4, { phone: s.customerContact }),
+                        new TableColumnStatus(3, { status: new SalesStatus(s.status).status }),
+                        new TableColumnPhone(4, { phone: s.customerContact, copy: true }),
                         new TableColumnCurrency(5, { value: s.paymentValue }),
                         new TableColumn(6, s.paymentMethod),
                         new TableColumnActions(7, { actionButtons: [
-                            new Button(() => this.returnOfAnItem(s.id), '', faRotateLeft)
+                            new Button(async () => {
+                                    const confirm = await this.dialogService.open({
+                                        id: s.id,
+                                        title: 'Devolver item',
+                                        content: `Deseja realmente devolver a venda ${s.id} para o(a) cliente ${s.customerName}?`
+                                    });
+
+                                    if (confirm) {
+                                        this.returnOfAnItem(s.id);
+                                    }
+                                },
+                                '', 
+                                faRotateLeft, 
+                                ButtonType.primary, 
+                                s.status.toLowerCase() === 'devolvido',
+                                'Devolver'),
+                            new Button(() => 
+                                this.saleEditService.edit(s.id), 
+                                '', 
+                                faEdit, 
+                                ButtonType.primary, 
+                                s.status.toLowerCase() === 'devolvido',
+                                'Editar'),
+                            new Button(async () => {
+                                    const confirm = await this.dialogService.open({
+                                        id: s.id,
+                                        title: 'Deletar venda',
+                                        content: `Deseja realmente deletar a venda ${s.id} para o(a) cliente ${s.customerName}?`
+                                    });
+
+                                    if (confirm) {
+                                        this.delete(s.id);
+                                    }
+                                }, 
+                                '', 
+                                faRemove, 
+                                ButtonType.danger, 
+                                s.status.toLowerCase() === 'devolvido',
+                                'Deletar')
                         ]})
                     ])),
                     this.getTotal(sales)
                 ])));
     }
     
-    public update(id: number, item: ISale): Observable<Response> {
-        throw new Error("Method not implemented.");
+    public update(id: number, item: ISaleCreation): Observable<Response> {
+        const sales = this.$sales.value;
+        const saleIndex = sales.findIndex(s => s.id == id);
+
+        if (saleIndex == -1)
+            throw new Error('Item inválido para edição');
+        
+        sales[saleIndex] = {
+            customerContact: item.customerContact,
+            customerName: item.customerName,
+            id: id,
+            paymentMethod: item.paymentMethod,
+            paymentValue: item.paymentValue,
+            products: item.products,
+            status: item.status
+        };
+
+        this.$sales.next(sales);
+
+        return of(new Response());
+    }
+
+    public create(item: ISaleCreation) {
+        const sales = this.$sales.value;
+        const id = (sales[sales.length - 1]?.id ?? 0) + 1;
+        const sale = { id, ...item };
+        sales.push(sale);
+        this.$sales.next(sales);
+
+        const salesStorage = this.getSalesFromStorage();
+        salesStorage.push(sale);
     }
     
     public delete(id: number): Observable<Response> {
-        throw new Error("Method not implemented.");
+        const sales = this.$sales.value;
+        const salesWithoutDeletedItem = sales.filter(s => s.id != id);
+
+        this.$sales.next(salesWithoutDeletedItem);
+
+        this.updateOrCreate();
+
+        return of(new Response());
     }
 
     private returnOfAnItem(id: number) {
@@ -186,8 +295,10 @@ export class SalesService implements ICrudService<ISale> {
             throw new Error('Sale not found');
         }
 
-        sale.state = 'Devolvido';
+        sale.status = 'Devolvido';
         this.$sales.next(sales);
+
+        this.commit();
     }
 
     private getTotal(sales: ISale[]) {
@@ -196,16 +307,18 @@ export class SalesService implements ICrudService<ISale> {
             value: sales.map(s => s.paymentValue).reduce((a, b) => a + b, 0),
         };
 
-        return new TableRowLine(9999, 
+        return new TableRowLine(
+            9999, 
             [
                 new TableColumn(1, 'Total: '),
-                new TableColumn(2, '-'),
-                new TableColumn(3, '-'),
-                new TableColumnQuantity(4, { quantity: total.qty }),
-                new TableColumnCurrency(5, { value: total.value }),
-                new TableColumn(6, '-'),
-                new TableColumnCurrency(7, { value: total.value })
-            ]);
+                new TableColumnQuantity(2, { quantity: total.qty }, 'Quantidade'),
+                new TableColumn(3, ''),
+                new TableColumn(4, ''),
+                new TableColumn(5, ''),
+                new TableColumn(6, ''),
+                new TableColumnCurrency(7, { value: total.value }, 'Valor')
+            ],
+            true);
     }
 
     private getSalesFromStorage(): ISale[] {

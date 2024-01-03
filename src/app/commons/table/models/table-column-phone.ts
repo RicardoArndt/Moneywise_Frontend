@@ -6,6 +6,6 @@ export class TableColumnPhone extends TableColumn {
 
     constructor(
         public override readonly id: number,
-        public override readonly inputs: {phone: string}
+        public override readonly inputs: {phone: string, copy: boolean}
     ) { super(id, ''); }
 }

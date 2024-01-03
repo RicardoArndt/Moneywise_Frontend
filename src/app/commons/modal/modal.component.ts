@@ -1,8 +1,7 @@
-import { Component, ContentChild, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, ContentChild, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ModalService } from './services/modal.service';
 import { ButtonComponent } from '../button/button.component';
-import { delay, filter, takeWhile, tap } from 'rxjs';
 import { Button } from '../button/models/button';
 import { ModalBodyDirective } from './directives/modal-body.directive';
 import { ButtonType } from '../button/models/button-type';
@@ -15,39 +14,26 @@ import { ButtonType } from '../button/models/button-type';
     ButtonComponent
   ],
   template: `
-    @if (isOpen()) {
-      <div class="modal--projection" (click)="confirmCloseModal()"></div>
+    <div class="modal--projection" (click)="confirmCloseModal()"></div>
       
-      @if (isConfirmDialogOpen()) {
-        <div class="modal animate__animated"
-          [ngClass]="
-            {
-              'animate__fadeIn': isOpen(), 
-              'animate__fadeOut': !isOpenWithouDelay()
-            }">
-        
-          <div class="modal__header">
-            <h3>Fechar pop-up?</h3>
-          </div>
-
-          <div class="modal__body">
-            <p>Deseja realmente fechar o pop-up?</p>
-          </div>
-
-          <div class="modal__footer">
-            <moneywise-app-button left [button]="cancelButton" />
-            <moneywise-app-button right [button]="confirmButton" />
-          </div>
+    @if (isConfirmDialogOpen()) {
+      <div class="modal">
+      
+        <div class="modal__header">
+          <p>Fechar pop-up?</p>
         </div>
-      }
-      
-      <div class="modal animate__animated"
-        [style.display]="isConfirmDialogOpen() ? 'none' : 'flex'"
-        [ngClass]="
-          {
-            'animate__fadeIn': isOpen(), 
-            'animate__fadeOut': !isOpenWithouDelay()
-          }">
+
+        <div class="modal__body">
+          <p>Deseja realmente fechar o pop-up?</p>
+        </div>
+
+        <div class="modal__footer">
+          <moneywise-app-button left [button]="cancelButton" />
+          <moneywise-app-button right [button]="confirmButton" />
+        </div>
+      </div>
+    } @else {
+      <div class="modal">
         <moneywise-app-button class="modal__btn--close" [button]="closeModalButton" />
       
         <div class="modal__header">
@@ -65,12 +51,10 @@ import { ButtonType } from '../button/models/button-type';
     }
   `
 })
-export class ModalComponent implements OnInit, OnDestroy {
+export class ModalComponent implements OnDestroy {
   @ContentChild(ModalBodyDirective) content!: ModalBodyDirective;
 
-  public readonly isOpen = signal(false);
   public readonly isConfirmDialogOpen = signal(false);
-  public readonly isOpenWithouDelay = signal(false);
   
   public readonly closeModalButton: Button = new Button(this.confirmCloseModal.bind(this), 'Fechar');
 
@@ -90,11 +74,6 @@ export class ModalComponent implements OnInit, OnDestroy {
     private readonly modalService: ModalService
   ) { }
 
-  public ngOnInit(): void {
-    this.listenIsOpen();
-    this.listenIsNotOpen();
-  }
-
   public ngOnDestroy(): void {
     this.isAlive = false;
   }
@@ -110,30 +89,5 @@ export class ModalComponent implements OnInit, OnDestroy {
 
   public cancelCloseModal() {
     this.isConfirmDialogOpen.update(_ => false);
-  }
-
-  private listenIsNotOpen() {
-    this.modalService
-      .getIsOpen()
-      .pipe(
-        filter(isOpen => !isOpen),
-        tap(_ => this.isOpenWithouDelay.update(_ => false)),
-        delay(200),
-        takeWhile(_ => this.isAlive)
-      )
-      .subscribe(_ => this.isOpen.update(_ => false));
-  }
-
-  private listenIsOpen() {
-    this.modalService
-      .getIsOpen()
-      .pipe(
-        filter(isOpen => isOpen),
-        takeWhile(_ => this.isAlive)
-      )
-      .subscribe(_ => {
-        this.isOpen.update(_ => true);
-        this.isOpenWithouDelay.update(_ => true);
-      });
   }
 }

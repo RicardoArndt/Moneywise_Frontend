@@ -7,5 +7,7 @@ export class Button {
         public readonly title?: string,
         public readonly icon?: IconDefinition,
         public readonly type: ButtonType = ButtonType.primary,
+        public readonly disabled: boolean = false,
+        public readonly tooltip: string = ''
     ) { }
 }

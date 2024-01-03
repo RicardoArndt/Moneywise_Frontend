@@ -14,7 +14,11 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
     <div 
       class="btn__container" 
       [ngClass]="{'btn__container--right': right, 'btn__container--left': left}">
-      <button class="btn btn__responsive btn__{{button.type}} btn--no-border" [disabled]="disabled" (click)="button.action()">
+      <button 
+        class="btn btn__responsive btn__{{button.type}} btn--no-border" 
+        [disabled]="disabled || button.disabled"
+        [title]="button.tooltip"
+        (click)="button.action()">
         @if (button.icon) {
           <fa-icon [icon]="button.icon"></fa-icon>
         }

@@ -4,6 +4,7 @@ export class TableColumn {
 
     constructor(
         public readonly id: number,
-        public readonly value: string
+        public readonly value: string,
+        public readonly label: string = '',
     ) { }
 }

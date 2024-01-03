@@ -56,12 +56,14 @@
     &__header {
         padding: 2rem;
         border-bottom: 1px solid #e9e9e9;
+        font-size: 2rem;
     }   
 
     &__body {
         flex: 1;
         padding: 2rem;
         overflow: hidden;
+        font-size: 1.6rem;
     }
 
     &__footer {
