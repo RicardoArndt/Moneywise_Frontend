@@ -1,0 +1,16 @@
+.speech-bubble {
+    position: relative;
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: -.4rem; 
+        left: 1rem;
+        padding: .35rem;
+        background: inherit;
+        border: inherit;
+        border-right: 0;
+        border-bottom: 0;
+        transform: rotate(45deg);
+    }
+}
