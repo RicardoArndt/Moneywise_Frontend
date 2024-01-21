@@ -1,8 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { 
-    FormArray, 
-    FormBuilder, 
+    FormArray,
     FormControl, 
     FormGroup, 
     ReactiveFormsModule, 
@@ -19,6 +18,9 @@ import { IFormComponent } from "../../../commons/forms/models/form";
 import { SalesService } from "../services/sales.service";
 import { SaleEditService } from "../services/sale-edit.service";
 import { ISaleProduct } from "../models/sale-product";
+import { InputCurrency } from "../../../commons/input/models/input-currency";
+import { FormCurrencyControl } from "../../../commons/controls/form-currency-control";
+import { FormBuilder } from "../../../commons/builders/form.builder";
 
 @Component({
     selector: 'moneywise-app-product-form',
@@ -31,11 +33,14 @@ import { ISaleProduct } from "../models/sale-product";
     ],
     template: `
         <moneywise-app-form class="form" [formGroup]="formGroup">
-            <div class="form__group" *ngFor="let product of productsGroup; index as i">
-                <label>Produto {{ i + 1 }}</label>
-                <moneywise-app-input [input]="getProductNameInput(product, i)" />
-                <moneywise-app-input [input]="getProductQuantityInput(product, i)" />
-            </div>
+            @for (product of productsGroup; track i; let i = $index) {
+                <div class="form__group">
+                    <label>Produto {{ i + 1 }}</label>
+                    <moneywise-app-input [input]="getProductNameInput(product, i)" />
+                    <moneywise-app-input [input]="getProductQuantityInput(product, i)" />
+                    <moneywise-app-input [input]="getProductValueInput(product, i)" />
+                </div>
+            }
         </moneywise-app-form>
 
         <div class="action-buttons">
@@ -54,18 +59,20 @@ export class ProductFormComponent implements IFormComponent, OnInit {
         products: this.formBuilder.array([
             this.formBuilder.group({ 
                 name: this.formBuilder.control('', [Validators.required]),
-                quantity: this.formBuilder.control('', [Validators.required]) 
+                quantity: this.formBuilder.control(null, [Validators.required]),
+                value: this.formBuilder.currencyControl(null, [Validators.required])
             })
         ])
     });
 
-    public get productsControls(): { name: FormControl, quantity: FormControl }[] {
+    public get productsControls(): { name: FormControl, quantity: FormControl, value: FormCurrencyControl }[] {
         return this.productsForm.controls.map(control => {
             const formGroup = control as FormGroup;
 
             return { 
                 name: formGroup.get('name') as FormControl,
-                quantity: formGroup.get('quantity') as FormControl
+                quantity: formGroup.get('quantity') as FormControl,
+                value: formGroup.get('value') as FormCurrencyControl
             };
         });
     }
@@ -101,7 +108,8 @@ export class ProductFormComponent implements IFormComponent, OnInit {
                     this.productsForm.push(
                         this.formBuilder.group({ 
                             name: this.formBuilder.control(product.name, [Validators.required]),
-                            quantity: this.formBuilder.control(product.quantity, [Validators.required]) 
+                            quantity: this.formBuilder.control(product.quantity, [Validators.required]),
+                            value: this.formBuilder.currencyControl(product.value, [Validators.required])
                         }));
                 }
             });
@@ -126,15 +134,24 @@ export class ProductFormComponent implements IFormComponent, OnInit {
             `product-qty-${index}`,
             'number',
             control,
-            'Quantidade',
-            'qty');
+            'Quantidade');
     };
+
+    public getProductValueInput(formGroup: FormGroup, index: number): InputCurrency {
+        const control = formGroup.get('value') as FormControl;
+
+        return new InputCurrency(
+            `product-value-${index}`,
+            control,
+            'Valor');
+    }
 
     public addProductForm() {
         this.productsForm.push(
             this.formBuilder.group({ 
                 name: this.formBuilder.control('', [Validators.required]),
-                quantity: this.formBuilder.control('', [Validators.required]) 
+                quantity: this.formBuilder.control(null, [Validators.required]),
+                value: this.formBuilder.currencyControl(null, [Validators.required])
             }));
     }
 
@@ -150,7 +167,8 @@ export class ProductFormComponent implements IFormComponent, OnInit {
         const products: ISaleProduct[] = this.productsControls.map(control => {
             return {
               name: control.name.value,
-              quantity: control.quantity.value
+              quantity: control.quantity.value,
+              value: control.value.getCurrentValue()
             }
           }
         );
@@ -164,7 +182,8 @@ export class ProductFormComponent implements IFormComponent, OnInit {
         const products: ISaleProduct[] = this.productsControls.map(control => {
             return {
               name: control.name.value,
-              quantity: control.quantity.value
+              quantity: control.quantity.value,
+              value: control.value.getCurrentValue()
             }
           }
         );

@@ -5,8 +5,6 @@ import { FormControl, ReactiveFormsModule, Validators } from "@angular/forms";
 import { InputSelect, InputSelectOption } from "../../../commons/input/models/input-select";
 import { InputSelectComponent } from "../../../commons/input/input-select.component";
 import { InputComponent } from "../../../commons/input/input.component";
-import { InputCurrency } from "../../../commons/input/models/input-currency";
-import { FormCurrencyControl } from "../../../commons/controls/form-currency-control";
 import { FormBuilder } from "../../../commons/builders/form.builder";
 import { IFormComponent } from "../../../commons/forms/models/form";
 import { SalesService } from "../services/sales.service";
@@ -25,9 +23,8 @@ import { mergeMap, filter, tap } from "rxjs";
     ],
     template: `
         <form class="form" [formGroup]="formGroup">
-            <moneywise-app-input-select [formGroup]="formGroup" [input]="paymentMethodInput" />
-            <moneywise-app-input-select [formGroup]="formGroup" [input]="paymentStatusInput" />
-            <moneywise-app-input [formGroup]="formGroup" [input]="valueInput" />
+            <moneywise-app-input-select [input]="paymentMethodInput" />
+            <moneywise-app-input-select [input]="paymentStatusInput" />
         </form>
     `
 })
@@ -39,8 +36,7 @@ export class PaymentFormComponent implements IFormComponent, OnInit {
 
     public formGroup = this.formBuilder.group({
         method: this.formBuilder.control('', [Validators.required]),
-        status: this.formBuilder.control('', [Validators.required]),
-        value: this.formBuilder.currencyControl('', [Validators.required])
+        status: this.formBuilder.control('', [Validators.required])
     });
 
     public get methodControl(): FormControl {
@@ -49,10 +45,6 @@ export class PaymentFormComponent implements IFormComponent, OnInit {
 
     public get statusControl(): FormControl {
         return this.formGroup.get('status') as FormControl;
-    }
-
-    public get valueControl(): FormCurrencyControl {
-        return this.formGroup.get('value') as FormCurrencyControl;
     }
 
     public paymentMethodInput: InputSelect<InputSelectOption> = new InputSelect(
@@ -90,12 +82,6 @@ export class PaymentFormComponent implements IFormComponent, OnInit {
             }
         ]);
 
-    public valueInput: InputCurrency = new InputCurrency(
-        'payment-value',
-        this.formGroup.controls.value,
-        'Valor'
-    );
-
     constructor(
         private readonly formBuilder: FormBuilder,
         private readonly salesService: SalesService,
@@ -112,14 +98,12 @@ export class PaymentFormComponent implements IFormComponent, OnInit {
             .subscribe(payment => {
                 this.methodControl.setValue(payment?.paymentMethod);
                 this.statusControl.setValue(payment?.status);
-                this.valueControl.setValue(payment?.paymentValue);
             });
     }
 
     public async onSave() {
         const payment: ISalePayment = {
             paymentMethod: this.methodControl.value,
-            paymentValue: this.valueControl.getCurrentValue(),
             status: this.statusControl.value
         };
 
@@ -129,7 +113,6 @@ export class PaymentFormComponent implements IFormComponent, OnInit {
     public async onEdit() {
         const payment: ISalePayment = {
             paymentMethod: this.methodControl.value,
-            paymentValue: this.valueControl.getCurrentValue(),
             status: this.statusControl.value
         };
 

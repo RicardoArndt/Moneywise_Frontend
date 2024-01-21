@@ -45,8 +45,9 @@ export class MenuItemsComponent {
   public menuItems: MenuItem[] = [
     new MenuItem(1, 'Dashboard', ''),
     new MenuItem(2, 'Vendas', 'sales'),
-    new MenuItem(3, 'Users', 'users'),
-    new MenuItem(4, 'Settings', 'settings')
+    new MenuItem(3, 'Fluxo de Caixa', 'cash-flow'),
+    new MenuItem(4, 'Users', 'users'),
+    new MenuItem(5, 'Settings', 'settings'),
   ];
 
   public closeMenu() {

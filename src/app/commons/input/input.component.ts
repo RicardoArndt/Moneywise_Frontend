@@ -20,7 +20,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
     InputMaskCurrencyDirective
   ],
   template: `
-    <div class="input" *ngIf="input">
+    <div class="input" *ngIf="input" [title]="input.title">
         <label class="input__label" [for]="input.id">{{ input.label }}</label>
         <input 
             class="input__control"

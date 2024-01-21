@@ -1,5 +1,7 @@
 import { Component, OnInit, WritableSignal, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs';
+
 import { ButtonComponent } from '../button/button.component';
 import { Button } from '../button/models/button';
 import { ButtonType } from '../button/models/button-type';
@@ -7,7 +9,7 @@ import { DialogService } from './services/dialog.service';
 import { ModalService } from '../modal/services/modal.service';
 import { ModalComponent } from '../modal/modal.component';
 import { ModalBodyDirective } from '../modal/directives/modal-body.directive';
-import { filter } from 'rxjs';
+import { IModalComponent } from '../modal/models/modal';
 
 @Component({
   selector: 'moneywise-app-dialog',
@@ -35,10 +37,12 @@ import { filter } from 'rxjs';
     </moneywise-app-modal>
   `
 })
-export class DialogComponent implements OnInit {
-    public id!: number;
+export class DialogComponent implements IModalComponent<any>, OnInit {
+    public id?: number;
     public title: WritableSignal<string> = signal('');
     public content: WritableSignal<string> = signal('');
+
+    public input: any;
 
     public discardButton: Button = new Button(this.discard.bind(this), 'Não', undefined, ButtonType.danger);
     public confirmButton: Button = new Button(this.confirm.bind(this), 'Sim', );
@@ -59,7 +63,7 @@ export class DialogComponent implements OnInit {
     }
 
     public confirm() {
-        this.dialogService.confirm(this.id);
+        this.dialogService.confirm(this.id ?? 1);
 
         this.modalService.close();
     }

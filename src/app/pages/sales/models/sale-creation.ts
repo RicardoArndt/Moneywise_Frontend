@@ -5,6 +5,5 @@ export interface ISaleCreation {
     customerContact: string;
     status: string;
     products: ISaleProduct[];
-    paymentValue: number;
     paymentMethod: string;
 }

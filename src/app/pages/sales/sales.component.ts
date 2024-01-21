@@ -9,6 +9,7 @@ import { SaleCreationModalComponent } from './components/sale-creation-modal.com
 import { Button } from '../../commons/button/models/button';
 import { SalesService } from './services/sales.service';
 import { PhonePipe } from '../../commons/pipes/phone.pipe';
+import { SaleEditService } from './services/sale-edit.service';
 
 @Component({
   standalone: true,
@@ -34,7 +35,8 @@ export class SalesComponent {
 
   public constructor(
     private readonly modalService: ModalService,
-    private readonly salesService: SalesService
+    private readonly salesService: SalesService,
+    private readonly saleEditService: SaleEditService
   ) { }
 
   ngOnInit() {
@@ -44,6 +46,7 @@ export class SalesComponent {
   }
 
   public openModalSaleCreation() {
+    this.saleEditService.edit(0);
     this.modalService.open(SaleCreationModalComponent, { form: 'customer' }, true);
   }
 }

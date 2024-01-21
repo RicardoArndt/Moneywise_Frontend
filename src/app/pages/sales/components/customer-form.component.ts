@@ -24,8 +24,8 @@ import { filter, mergeMap, tap } from "rxjs";
     ],
     template: `
         <form class="form" [formGroup]="formGroup">
-            <moneywise-app-input [formGroup]="formGroup" [input]="customerNameInput" />
-            <moneywise-app-input [formGroup]="formGroup" [input]="customerContactInput" />
+            <moneywise-app-input [input]="customerNameInput" />
+            <moneywise-app-input [input]="customerContactInput" />
         </form>
     `
 })

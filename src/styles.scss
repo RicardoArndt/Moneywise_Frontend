@@ -17,6 +17,7 @@
 @import "scss/components/nav";
 @import "scss/components/navigator-content";
 @import "scss/components/status";
+@import "scss/components/speech-bubble";
 @import "scss/components/table";
 @import "scss/components/table-mobile";
 
@@ -31,9 +32,17 @@ body, html {
     font-size: 10px;
 }
 
-* {
+p {
     padding: 0;
     margin: 0;
+}
+
+ul {
+    padding: 0;
+    margin: 0;
+}
+
+* {
     box-sizing: border-box;
     font-family: 'Lato', sans-serif;
 }

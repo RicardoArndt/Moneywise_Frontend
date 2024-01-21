@@ -1,6 +1,7 @@
 import { Injectable, Type } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject, Observable, Subscription } from 'rxjs';
+import { IModalComponent } from '../models/modal';
 
 @Injectable({
     providedIn: 'root'
@@ -16,7 +17,7 @@ export class ModalService {
         private readonly activatedRoute: ActivatedRoute
     ) { }
 
-    public open<TModal, TInput>(modal: Type<TModal>, input: TInput|null, isQueryParams: boolean = false) {
+    public open<TModal extends IModalComponent<TInput>, TInput>(modal: Type<TModal>, input: TInput|null, isQueryParams: boolean = false) {
         if (isQueryParams) {
             this.router.navigate(
                 [], 
@@ -28,8 +29,8 @@ export class ModalService {
                 });
         }
 
-        if (this.$modal.value) {
-            throw new Error('This modal already is opened');
+        if (!!this.$modal.value?.input) {
+            this.$modal.next(null);
         }
 
         this.$modal.next({modalType: modal, input});

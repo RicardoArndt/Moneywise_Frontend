@@ -14,11 +14,38 @@
     }
 
     &__line {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
         background-color: white;
         padding: 2rem;
+    }
+
+    &__label {
+        display: inline;
+        margin-right: .5rem;
+        position: relative;
+    }
+
+    &__value + &__label::before {
+        content: "\A";
+        white-space: pre;
+    }
+
+    &__value + &__value::before {
+        content: ", ";
+        font-weight: normal;
+    }
+
+    &__value {
+        display: inline;
+        margin: 0;
+        font-weight: bold;
+
+        & > :not(moneywise-app-actions) {
+            display: inline-flex;
+        }
+
+        & > moneywise-app-actions {
+            margin-top: 1rem;
+        }
     }
 
     &__column {

@@ -16,10 +16,10 @@ import { FormService } from '../services/form.service';
     AutoFocusDirective
   ],
   template: `
-    <div class="input">
+    <div class="input" [title]="input.title">
         <label class="input__label" [for]="input.id">{{ input.label }}</label>
         <select 
-          class="input__control" 
+          class="input__control"
           [ngClass]="{'input__control--invalid': input.control.errors && (input.control.touched || submitted())}"
           [moneywiseAppAutoFocus]="input.autoFocus" [formControl]="input.control">
             @for (opt of input.options; track opt.name) {

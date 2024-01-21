@@ -23,6 +23,9 @@ import { ISaleCreation } from "../models/sale-creation";
 import { ISaleCustomer } from "../models/sale-customer";
 import { ISalePayment } from "../models/sale-payment";
 import { ISaleProduct } from "../models/sale-product";
+import { ModalService } from "../../../commons/modal/services/modal.service";
+import { RefundModalComponent } from "../components/refund-modal.component";
+import { IProductRefundOptions } from "../models/product-refund-options";
 
 @Injectable({
     providedIn: 'root'
@@ -38,14 +41,16 @@ export class SalesService implements ICrudService<ISale> {
 
     constructor(
         private readonly dialogService: DialogService,
+        private readonly modalService: ModalService,
         private readonly saleEditService: SaleEditService
     ) {
-        this.$sales.next(this.getSalesFromStorage());
+        this.$sales.next(this.getSales());
     }
 
     public async createProduct(product: ISaleProduct) {
         if (!product 
             || !product.name 
+            || !product.value
             || !product.quantity) {
             throw Error('Produto adicionado é inválido');
         }
@@ -64,8 +69,7 @@ export class SalesService implements ICrudService<ISale> {
 
     public async createPayment(payment: ISalePayment) {
         if (!payment 
-            || !payment.paymentMethod 
-            || !payment.paymentValue 
+            || !payment.paymentMethod
             || !payment.status) {
             throw Error('Pagamento inválido');
         }
@@ -106,7 +110,6 @@ export class SalesService implements ICrudService<ISale> {
             customerContact: this.customer!.customerContact,
             customerName: this.customer!.customerName,
             paymentMethod: this.payment!.paymentMethod,
-            paymentValue: this.payment!.paymentValue,
             products: this.products,
             status: this.payment!.status
         };
@@ -152,7 +155,6 @@ export class SalesService implements ICrudService<ISale> {
 
             return {
                 paymentMethod: sale.paymentMethod,
-                paymentValue: sale.paymentValue,
                 status: sale.status
             };
         }));
@@ -195,32 +197,34 @@ export class SalesService implements ICrudService<ISale> {
                         new TableColumn(2, s.customerName),
                         new TableColumnStatus(3, { status: new SalesStatus(s.status).status }),
                         new TableColumnPhone(4, { phone: s.customerContact, copy: true }),
-                        new TableColumnCurrency(5, { value: s.paymentValue }),
+                        new TableColumnCurrency(5, { value: s.products.map(p => p.value).reduce((a, b) => a + b, 0) }),
                         new TableColumn(6, s.paymentMethod),
                         new TableColumnActions(7, { actionButtons: [
                             new Button(async () => {
-                                    const confirm = await this.dialogService.open({
-                                        id: s.id,
-                                        title: 'Devolver item',
-                                        content: `Deseja realmente devolver a venda ${s.id} para o(a) cliente ${s.customerName}?`
-                                    });
-
-                                    if (confirm) {
-                                        this.returnOfAnItem(s.id);
-                                    }
+                                    await this.modalService.open<RefundModalComponent, IProductRefundOptions>(
+                                        RefundModalComponent, 
+                                        {
+                                            saleId: s.id,
+                                            products: s.products.map(p => (
+                                                { 
+                                                    name: `${p.name} - QTD: ${p.quantity}`, 
+                                                    value: p.name,
+                                                    quantity: p.quantity 
+                                                }))
+                                        });
                                 },
                                 '', 
                                 faRotateLeft, 
                                 ButtonType.primary, 
                                 s.status.toLowerCase() === 'devolvido',
-                                'Devolver'),
+                                s.status.toLowerCase() === 'devolvido' ? 'Item devolvido não pode ser modificado' : 'Devolver'),
                             new Button(() => 
                                 this.saleEditService.edit(s.id), 
                                 '', 
                                 faEdit, 
                                 ButtonType.primary, 
                                 s.status.toLowerCase() === 'devolvido',
-                                'Editar'),
+                                s.status.toLowerCase() === 'devolvido' ? 'Item devolvido não pode ser modificado' : 'Editar'),
                             new Button(async () => {
                                     const confirm = await this.dialogService.open({
                                         id: s.id,
@@ -236,7 +240,7 @@ export class SalesService implements ICrudService<ISale> {
                                 faRemove, 
                                 ButtonType.danger, 
                                 s.status.toLowerCase() === 'devolvido',
-                                'Deletar')
+                                s.status.toLowerCase() === 'devolvido' ? 'Item devolvido não pode ser modificado' : 'Deletar')
                         ]})
                     ])),
                     this.getTotal(sales)
@@ -255,7 +259,6 @@ export class SalesService implements ICrudService<ISale> {
             customerName: item.customerName,
             id: id,
             paymentMethod: item.paymentMethod,
-            paymentValue: item.paymentValue,
             products: item.products,
             status: item.status
         };
@@ -272,7 +275,7 @@ export class SalesService implements ICrudService<ISale> {
         sales.push(sale);
         this.$sales.next(sales);
 
-        const salesStorage = this.getSalesFromStorage();
+        const salesStorage = this.getSales();
         salesStorage.push(sale);
     }
     
@@ -287,24 +290,92 @@ export class SalesService implements ICrudService<ISale> {
         return of(new Response());
     }
 
-    private returnOfAnItem(id: number) {
+    public refund(id: number, productsRefund: { name: string, qty: number }[]) {
         const sales = this.$sales.value;
+        const saleIndex = sales.findIndex(s => s.id == id);
         const sale = sales.find(s => s.id == id);
+        const newSale = Object.assign({}, sales.find(s => s.id == id));
 
         if (!sale) {
             throw new Error('Sale not found');
         }
+        
+        const productsWithoutRefund = sale.products.filter(p => {
+            const productRefund = productsRefund.find(pr => pr.name.toLowerCase() == p.name.toLowerCase()); 
 
-        sale.status = 'Devolvido';
+            if (!productRefund) {
+                return true;
+            }
+            
+            if (+productRefund.qty < +p.quantity) {
+                return true;
+            }
+
+            return false;
+        }).map(p => {
+            const productRefund = productsRefund.find(pr => pr.name.toLowerCase() == p.name.toLowerCase()); 
+            const pCopy = {...p};
+            if (!productRefund) {
+                return pCopy;
+            }
+
+            if (+productRefund.qty < +pCopy.quantity) {
+                pCopy.quantity -= productRefund.qty;
+                const unitValue = +p.value / +p.quantity;
+                pCopy.value = unitValue * +pCopy.quantity;
+            }
+
+            return pCopy;
+        });
+        
+        const newProductsRefund = sale.products.filter(p => {
+            const productRefund = productsRefund.find(pr => pr.name.toLowerCase() == p.name.toLowerCase()); 
+
+            if (!productRefund) {
+                return false;
+            }
+            
+            if (+productRefund.qty < +p.quantity) {
+                return true;
+            }
+
+            return true;
+        }).map(p => {
+            const productRefund = productsRefund.find(pr => pr.name.toLowerCase() == p.name.toLowerCase()); 
+            const pCopy = {...p};
+            if (!productRefund) {
+                return pCopy;
+            }
+
+            if (+productRefund.qty < +pCopy.quantity) {
+                pCopy.quantity = productRefund.qty;
+                const unitValue = +p.value / +p.quantity;
+                pCopy.value = unitValue * +productRefund.qty;
+            }
+
+            return pCopy;
+        });
+
+        sale.products = productsWithoutRefund;
+
+        if (!sale.products.length) {
+            sales.splice(saleIndex, 1);
+        }
+        
+        newSale.products = newProductsRefund;
+        newSale.status = 'Devolvido';
+        newSale.id = sales.map(s => s.id).sort().reverse()[0] + 1;
+        sales.push(newSale);
         this.$sales.next(sales);
 
         this.commit();
     }
 
     private getTotal(sales: ISale[]) {
+        const completedSales = sales.filter(s => s.status.toLowerCase() == 'pago');
         const total = {
-            qty: sales.flatMap(s => s.products?.map(p => +p.quantity) ?? [0]).reduce((a, b) => a + b, 0),
-            value: sales.map(s => s.paymentValue).reduce((a, b) => a + b, 0),
+            qty: completedSales.flatMap(s => s.products.map(p => +p.quantity) ?? [0]).reduce((a, b) => a + b, 0),
+            value: completedSales.flatMap(s => s.products.map(p => p.value)).reduce((a, b) => a + b, 0),
         };
 
         return new TableRowLine(
@@ -321,7 +392,7 @@ export class SalesService implements ICrudService<ISale> {
             true);
     }
 
-    private getSalesFromStorage(): ISale[] {
+    private getSales(): ISale[] {
         const sales = localStorage.getItem('sales') ?? '[]';
         return JSON.parse(sales);
     }

@@ -3,6 +3,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { SalesComponent } from './pages/sales/sales.component';
 import { UsersComponent } from './pages/users/users.component';
 import { SettingsComponent } from './pages/settings/settings.component';
+import { CashFlowComponent } from './pages/cash-flow/cash-flow.component';
 
 export const routes: Routes = [
     {
@@ -12,6 +13,11 @@ export const routes: Routes = [
                 path: '',
                 title: 'Dashboard',
                 component: DashboardComponent
+            },
+            {
+                path: 'cash-flow',
+                title: 'Fluxo de Caixa',
+                component: CashFlowComponent
             },
             {
                 path: 'sales',

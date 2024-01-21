@@ -5,6 +5,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ClipboardModule, ClipboardService } from 'ngx-clipboard';
 
 import { PhonePipe } from '../pipes/phone.pipe';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'moneywise-app-phone',
@@ -36,10 +37,17 @@ export class PhoneComponent {
   public faCopy = faCopy;
 
   constructor(
-    private readonly clipboardService: ClipboardService
+    private readonly clipboardService: ClipboardService,
+    private readonly messageService: MessageService,
+    private readonly phonePipe: PhonePipe
   ) { }
 
   public onCopy() {
     this.clipboardService.copy(this.phone);
+    this.messageService.add({
+      severity: "success",
+      summary: "Copiado!",
+      detail: `O telefone ${this.phonePipe.transform(this.phone)} foi copiado`
+    })
   }
 }

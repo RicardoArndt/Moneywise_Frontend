@@ -1,5 +1,6 @@
 import { Injectable } from "@angular/core";
-import { BehaviorSubject, filter } from "rxjs";
+import { BehaviorSubject } from "rxjs";
+
 import { IDialog } from "../models/dialog";
 import { ModalService } from "../../modal/services/modal.service";
 import { DialogComponent } from "../dialog.component";

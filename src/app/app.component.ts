@@ -1,9 +1,20 @@
-import { AfterViewInit, Component, Type, ViewChild, ViewContainerRef } from '@angular/core';
+import { 
+  AfterViewInit, 
+  Component, 
+  ComponentRef, 
+  Type, 
+  ViewChild, 
+  ViewContainerRef 
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
+
 import { HeaderComponent } from './layout/header/header.component';
 import { ModalService } from './commons/modal/services/modal.service';
-import { filter } from 'rxjs';
+import { IModalComponent } from './commons/modal/models/modal';
+import { ToastComponent } from './commons/toast/toast.component';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'moneywise-app',
@@ -11,12 +22,18 @@ import { filter } from 'rxjs';
   imports: [
     CommonModule, 
     RouterOutlet,
-    HeaderComponent
+    HeaderComponent,
+    ToastComponent
+  ],
+  providers: [
+    MessageService
   ],
   template: `
     <moneywise-app-header />
 
     <ng-container #modal></ng-container>
+
+    <moneywise-app-toast />
 
     <main class="main">
         <router-outlet></router-outlet>
@@ -43,7 +60,8 @@ export class AppComponent implements AfterViewInit {
     this.modalService.getModal()
       .pipe(filter(modal => !!modal))
       .subscribe(modal => {
-        this.modal.createComponent(modal?.modalType as Type<any>);
+        const componentRef: ComponentRef<IModalComponent<any>> = this.modal.createComponent(modal?.modalType as Type<any>);
+        componentRef.instance.input = modal?.input;
       });
 
     this.modalService.getModal()

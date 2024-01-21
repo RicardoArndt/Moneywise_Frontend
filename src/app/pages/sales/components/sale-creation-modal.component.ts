@@ -24,6 +24,7 @@ import { ModalService } from '../../../commons/modal/services/modal.service';
 import { FormService } from '../../../commons/services/form.service';
 import { ISaleForm } from '../models/sale-form';
 import { IFormComponent } from '../../../commons/forms/models/form';
+import { IModalComponent } from '../../../commons/modal/models/modal';
 
 @Component({
   selector: 'moneywise-app-sale-creation-modal',
@@ -39,9 +40,6 @@ import { IFormComponent } from '../../../commons/forms/models/form';
     CustomerFormComponent,
     ProductFormComponent,
     PaymentFormComponent
-  ],
-  providers: [
-    FormService
   ],
   template: `
     <moneywise-app-modal>
@@ -90,7 +88,9 @@ import { IFormComponent } from '../../../commons/forms/models/form';
     </moneywise-app-modal>
   `,
 })
-export class SaleCreationModalComponent implements AfterViewInit {
+export class SaleCreationModalComponent implements IModalComponent<any>, AfterViewInit {
+  public input?: any;
+  
   public previousButton: Button = new Button(this.previousForm.bind(this), 'Anterior');
   public nextButton: Button = new Button(this.nextForm.bind(this), 'Próximo');
 

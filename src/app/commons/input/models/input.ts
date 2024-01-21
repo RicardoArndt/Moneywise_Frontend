@@ -1,4 +1,4 @@
-import { AbstractControl, FormControl } from "@angular/forms";
+import { FormControl } from "@angular/forms";
 
 export class Input {
     constructor(
@@ -9,7 +9,8 @@ export class Input {
         public readonly autocomplete?: string,
         public readonly autoFocus: boolean = false,
         public readonly usePhoneMask: boolean = false,
-        public readonly useCurrencyMask: boolean = false
+        public readonly useCurrencyMask: boolean = false,
+        public title: string = ''
     ) { }
 
     public* getErrorsMessage(submitted: boolean) {
@@ -19,9 +20,15 @@ export class Input {
         
         yield this.isRequired();
         yield this.minLength();
+        yield this.min();
         yield this.maxLength();
+        yield this.max();
 
         return '';
+    }
+
+    public clearTitle() {
+        this.title = '';
     }
 
     protected isRequired() {
@@ -40,9 +47,25 @@ export class Input {
         return '';
     }
 
+    protected min() {
+        if (this.control.errors!['min']) {
+            return `O campo deve ter no mínimo ${this.control.errors!['min'].min}`
+        }
+
+        return '';
+    }
+
     protected maxLength() {
         if (this.control.errors!['maxlength']) {
             return `O campo deve ter no máximo ${this.control.errors!['maxlength'].requiredLength} caracteres`
+        }
+
+        return '';
+    }
+
+    protected max() {
+        if (this.control.errors!['max']) {
+            return `O campo deve ter no máximo ${this.control.errors!['max'].max}`
         }
 
         return '';

@@ -21,7 +21,7 @@ import { Table } from './models/table';
 
         <tbody class="table__body">
           @for (r of table.getRows(); track r.id) {
-            <tr class="table__line">
+            <tr class="table__line" [ngClass]="{'table__line--total': r.isTotal}">
               @for (c of r.columns; track c.id) {
                 @if (!c.component) {
                   <td class="table__column">{{ c.value }}</td>
@@ -43,32 +43,22 @@ import { Table } from './models/table';
     <div class="table-mobile">
       <div class="table-mobile__body">
         @for (r of table.getRows(); track r.id; let rIndex = $index) {
-          <div class="table-mobile__line">
+          <dl class="table-mobile__line">
             @for (c of r.columns; track c.id; let cIndex = $index) {
-              @if (!c.component) {
-                <div class="table-mobile__column">
-                  <label>
-                    <strong>
-                      {{ r.isTotal ? c.label : table.getHead()[0].columns[cIndex].value }}
-                    </strong>
-                  </label>
-                  {{ c.value }}
-                </div>
-              }  @else {
-                <div class="table-mobile__column">
-                  <label>
-                    <strong>
-                      {{ r.isTotal ? c.label : table.getHead()[0].columns[cIndex].value }}
-                    </strong>
-                  </label>
-                  <ng-container *ngComponentOutlet="
-                    c.component;
-                    inputs: c.inputs;
-                  " />
-                </div>
-              }
+                <dt class="table-mobile__label">{{ r.isTotal ? c.label : table.getHead()[0].columns[cIndex].value }}:</dt>
+                
+                @if (!c.component) {
+                  <dd class="table-mobile__value">{{ c.value }}</dd>
+                } @else {
+                  <dd class="table-mobile__value">
+                    <ng-container *ngComponentOutlet="
+                      c.component;
+                      inputs: c.inputs;
+                    " />
+                  </dd>
+                }
             }
-          </div>
+          </dl>
         }
       </div>
     </div>

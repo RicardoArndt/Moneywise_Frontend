@@ -6,6 +6,5 @@ export interface ISale {
     customerContact: string;
     status: string;
     products: ISaleProduct[];
-    paymentValue: number;
     paymentMethod: string;
 }

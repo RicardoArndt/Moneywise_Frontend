@@ -26,9 +26,17 @@
       max-height: 6.1rem;
     }
 
-    &:nth-child(even) {
-      background-color: var(--textEmphasis);
-      color: white;
+    &:not(.table__head > .table__line) {
+      &:hover {
+        background-color: var(--primary);
+        color: white;
+      }
+    }
+    
+    &--total {
+      background-color: var(--secondary) !important;
+      color: black !important;
+      font-weight: bold;
     }
   }
 
