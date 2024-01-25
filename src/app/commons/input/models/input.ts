@@ -3,7 +3,7 @@ import { FormControl } from "@angular/forms";
 export class Input {
     constructor(
         public readonly id: string,
-        public readonly type: 'text'|'number'|'',
+        public readonly type: 'text'|'number'|''|'password',
         public readonly control: FormControl,
         public readonly label: string,
         public readonly autocomplete?: string,

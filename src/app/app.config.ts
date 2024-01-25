@@ -1,5 +1,5 @@
 import { ApplicationConfig, Injectable, LOCALE_ID } from '@angular/core';
-import { RouterStateSnapshot, TitleStrategy, provideRouter } from '@angular/router';
+import { PreloadAllModules, RouterStateSnapshot, TitleStrategy, provideRouter, withDebugTracing, withPreloading } from '@angular/router';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import { Title } from '@angular/platform-browser';
@@ -35,7 +35,10 @@ export class TemplatePageTitleStrategy extends TitleStrategy {
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes),
+    provideRouter(routes, 
+      withPreloading(PreloadAllModules),
+      withDebugTracing(),
+    ),
     TemplatePageTitleStrategy,
     {
       provide: TitleStrategy,

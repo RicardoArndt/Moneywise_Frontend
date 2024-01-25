@@ -32,7 +32,7 @@ import { FormBuilder } from "../../../commons/builders/form.builder";
         ReactiveFormsModule
     ],
     template: `
-        <moneywise-app-form class="form" [formGroup]="formGroup">
+        <form class="form" [formGroup]="formGroup">
             @for (product of productsGroup; track i; let i = $index) {
                 <div class="form__group">
                     <label>Produto {{ i + 1 }}</label>
@@ -41,7 +41,7 @@ import { FormBuilder } from "../../../commons/builders/form.builder";
                     <moneywise-app-input [input]="getProductValueInput(product, i)" />
                 </div>
             }
-        </moneywise-app-form>
+        </form>
 
         <div class="action-buttons">
             <moneywise-app-button right [button]="removeProductButton" [disabled]="productsForm.length == 1" />
